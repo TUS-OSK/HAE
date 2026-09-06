@@ -1,5 +1,5 @@
 {
-  "name": "hae-scaffold",
+  "name": "hae",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,7 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.124.0",
+    "@upstash/redis": "^1.38.4",
     "next": "16.3.4",
+    "openai": "^7.10.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },

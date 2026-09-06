@@ -1,69 +1,63 @@
-import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="flex flex-1 flex-col items-center px-6 py-16 sm:py-24">
+      <div className="w-full max-w-2xl">
+        <p className="text-sm font-medium tracking-wide text-indigo-500 dark:text-indigo-400">
+          HAE
+        </p>
+        <h1 className="mt-2 text-4xl font-bold tracking-tight sm:text-5xl">
+          How to Expand Acronym
+        </h1>
+        <p className="mt-4 text-lg text-zinc-600 dark:text-zinc-400">
+          ランダムな頭文字の並びを、意味のある英語フレーズに広げるワードゲーム。
+          遊びながら英単語力を鍛えよう。
+        </p>
+
+        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+          <Link
+            href="/solo"
+            className="group rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:border-indigo-400 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <h2 className="text-xl font-semibold">
+              ソロプレイ{" "}
+              <span aria-hidden className="inline-block transition group-hover:translate-x-1">
+                →
+              </span>
+            </h2>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              AIが4つの観点で採点: 文法・テーマ一致・単語難易度・メタフィクション性。
+            </p>
+          </Link>
+
+          <Link
+            href="/play"
+            className="group rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
           >
-            Documentation
-          </a>
+            <h2 className="text-xl font-semibold">
+              マルチプレイ(座布団){" "}
+              <span aria-hidden className="inline-block transition group-hover:translate-x-1">
+                →
+              </span>
+            </h2>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              全員で同じ頭文字に挑戦し、お互いの回答に投票。座布団(得点)を一番集めた人が勝ち。
+            </p>
+          </Link>
         </div>
-      </main>
-    </div>
+
+        <section className="mt-12 rounded-2xl bg-zinc-100 p-6 text-sm text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
+          <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">遊び方</h3>
+          <ol className="mt-2 list-decimal space-y-1 pl-5">
+            <li>ランダムな頭文字(例: &quot;CIA&quot;)が出題される。</li>
+            <li>各文字から始まる単語をその順番どおりに並べ、意味のある英語フレーズを作る。</li>
+            <li>
+              ソロプレイはAIが採点、マルチプレイはプレイヤー同士の投票(座布団)でスコアが決まる。
+            </li>
+          </ol>
+        </section>
+      </div>
+    </main>
   );
 }
