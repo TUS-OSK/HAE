@@ -24,7 +24,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="ja"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+      <body className="relative flex min-h-full flex-col bg-[#08080b] text-zinc-100">
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
+        >
+          <div className="bg-grid absolute inset-0" />
+          <div className="absolute -top-40 left-1/4 h-[36rem] w-[36rem] rounded-full bg-violet-600/25 blur-[120px]" />
+          <div className="absolute top-1/3 -right-20 h-[30rem] w-[30rem] rounded-full bg-fuchsia-600/20 blur-[120px]" />
+          <div className="absolute bottom-[-10rem] left-1/3 h-[28rem] w-[28rem] rounded-full bg-amber-500/15 blur-[120px]" />
+        </div>
         {children}
       </body>
     </html>

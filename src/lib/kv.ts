@@ -59,8 +59,11 @@ let kv: KV | undefined;
 export function getKV(): KV {
   if (kv) return kv;
 
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  // Support both a direct Upstash setup (UPSTASH_REDIS_REST_*) and Vercel's
+  // Marketplace "Redis" integration, which injects KV_REST_API_* instead —
+  // same REST API shape either way, since Vercel KV is Upstash under the hood.
+  const url = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
 
   if (url && token) {
     kv = new UpstashKV(new Redis({ url, token }));

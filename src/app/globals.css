@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #08080b;
+  --foreground: #f4f4f5;
 }
 
 @theme inline {
@@ -12,13 +12,48 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+@layer components {
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 44px 44px;
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%);
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%);
+  }
+
+  .card {
+    @apply rounded-3xl border border-white/10 bg-white/[0.04] shadow-[0_8px_40px_-16px_rgba(0,0,0,0.7)] backdrop-blur-xl;
+  }
+
+  .btn-violet {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white transition-all duration-200 bg-gradient-to-r from-violet-500 to-fuchsia-500 shadow-[0_4px_24px_-6px_rgba(168,85,247,0.6)] hover:-translate-y-0.5 hover:shadow-[0_8px_30px_-4px_rgba(168,85,247,0.8)] disabled:pointer-events-none disabled:opacity-40;
+  }
+  .btn-amber {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-zinc-900 transition-all duration-200 bg-gradient-to-r from-amber-400 to-orange-500 shadow-[0_4px_24px_-6px_rgba(245,158,11,0.6)] hover:-translate-y-0.5 hover:shadow-[0_8px_30px_-4px_rgba(245,158,11,0.8)] disabled:pointer-events-none disabled:opacity-40;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-zinc-200 transition-all duration-200 border border-white/15 bg-white/[0.02] hover:bg-white/[0.07] disabled:pointer-events-none disabled:opacity-40;
+  }
+  .btn-pill-toggle {
+    @apply rounded-full px-4 py-1.5 text-sm font-medium transition-colors;
+  }
+
+  .input-field {
+    @apply w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-violet-400/60 focus:bg-white/[0.06];
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-violet-300 via-fuchsia-300 to-amber-200 bg-clip-text text-transparent;
+  }
+
+  .chip {
+    @apply inline-flex items-center rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs font-medium text-zinc-300;
+  }
 }

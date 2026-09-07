@@ -111,20 +111,18 @@ export default function RoomPage() {
   if (!player) {
     return (
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 px-6 py-10">
-        <h1 className="text-xl font-bold">ルーム {code} に参加</h1>
+        <h1 className="text-xl font-bold">
+          ルーム <span className="font-mono text-amber-300">{code}</span> に参加
+        </h1>
         <input
           value={joinName}
           onChange={(e) => setJoinName(e.target.value)}
           maxLength={20}
           placeholder="ニックネーム"
-          className="w-full rounded-lg border border-zinc-300 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-800"
+          className="input-field"
         />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button
-          onClick={joinExisting}
-          disabled={busy}
-          className="w-full rounded-xl bg-amber-500 py-3 font-semibold text-white hover:bg-amber-600 disabled:opacity-50"
-        >
+        {error && <p className="text-sm text-red-400">{error}</p>}
+        <button onClick={joinExisting} disabled={busy} className="btn-amber w-full">
           参加する
         </button>
       </main>
@@ -137,32 +135,35 @@ export default function RoomPage() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-10">
       <div className="flex items-center justify-between">
-        <Link href="/" className="text-sm text-zinc-500 hover:underline">
+        <Link href="/" className="text-sm text-zinc-500 transition hover:text-zinc-300">
           ← トップへ
         </Link>
-        <h1 className="font-mono text-2xl font-bold tracking-widest">{code}</h1>
+        <h1 className="font-mono text-2xl font-bold tracking-widest text-amber-300">
+          {code}
+        </h1>
         <span className="text-sm text-zinc-500">
           Round {room.round}/{room.maxRounds}
         </span>
       </div>
 
       {error && (
-        <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+        <p className="rounded-2xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-300">
           {error}
         </p>
       )}
 
       {room.phase === "lobby" && (
-        <div className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-          <p className="text-sm text-zinc-500">
-            このコードを友達に共有: <span className="font-mono font-bold">{code}</span>
+        <div className="card space-y-4 p-7">
+          <p className="text-sm text-zinc-400">
+            このコードを友達に共有:{" "}
+            <span className="font-mono font-bold text-amber-300">{code}</span>
           </p>
           <ul className="space-y-1">
             {room.players.map((p) => (
               <li key={p.id} className="flex items-center gap-2">
                 <span>{p.name}</span>
                 {p.id === room.hostId && (
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                  <span className="chip border-amber-400/30 bg-amber-400/10 text-amber-300">
                     ホスト
                   </span>
                 )}
@@ -173,7 +174,7 @@ export default function RoomPage() {
             <button
               onClick={() => callAction("start", { playerId: player.playerId })}
               disabled={busy}
-              className="w-full rounded-xl bg-amber-500 py-3 font-semibold text-white hover:bg-amber-600 disabled:opacity-50"
+              className="btn-amber w-full"
             >
               ゲームを開始
             </button>
@@ -184,15 +185,15 @@ export default function RoomPage() {
       )}
 
       {room.phase === "writing" && (
-        <div className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="card space-y-4 p-7">
           <div className="flex items-center justify-between">
             <AcronymBadge acronym={room.currentAcronym!} />
-            <span className="text-2xl font-bold tabular-nums text-amber-600 dark:text-amber-400">
+            <span className="text-2xl font-bold tabular-nums text-amber-300">
               {countdown}s
             </span>
           </div>
           {themeLabelFor(room.currentThemeId) && room.currentThemeId !== "none" && (
-            <span className="inline-block rounded-full bg-indigo-100 px-3 py-1 text-sm font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+            <span className="chip border-violet-400/30 bg-violet-500/10 text-violet-300">
               {themeLabelFor(room.currentThemeId)}
             </span>
           )}
@@ -204,8 +205,12 @@ export default function RoomPage() {
                 onChange={(e) => setAnswer(e.target.value)}
                 rows={2}
                 placeholder={`${room.currentAcronym!.length}語のフレーズを入力`}
-                className="w-full resize-none rounded-lg border border-zinc-300 bg-white p-3 text-lg dark:border-zinc-700 dark:bg-zinc-800"
+                className="input-field resize-none text-lg"
               />
+              <p className="text-xs text-zinc-500">
+                <span className="font-mono text-zinc-400">by / of / and</span>{" "}
+                のような小文字の助詞は自由に挟んでOK。
+              </p>
               <button
                 onClick={() =>
                   callAction("submit", { playerId: player.playerId, text: answer }).then(() =>
@@ -213,13 +218,13 @@ export default function RoomPage() {
                   )
                 }
                 disabled={busy || !answer.trim()}
-                className="w-full rounded-xl bg-amber-500 py-3 font-semibold text-white hover:bg-amber-600 disabled:opacity-50"
+                className="btn-amber w-full"
               >
                 送信
               </button>
             </>
           ) : (
-            <p className="rounded-lg bg-zinc-100 p-3 text-center text-sm dark:bg-zinc-800">
+            <p className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-center text-sm text-zinc-300">
               送信済み: 「{mySubmission.text}」— 他のプレイヤーを待っています (
               {room.submissions.length}/{room.players.length})
             </p>
@@ -228,10 +233,10 @@ export default function RoomPage() {
       )}
 
       {room.phase === "voting" && (
-        <div className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="card space-y-4 p-7">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">投票タイム 座布団を贈ろう</h2>
-            <span className="text-2xl font-bold tabular-nums text-amber-600 dark:text-amber-400">
+            <span className="text-2xl font-bold tabular-nums text-amber-300">
               {countdown}s
             </span>
           </div>
@@ -242,15 +247,15 @@ export default function RoomPage() {
               return (
                 <li
                   key={s.playerId}
-                  className={`flex items-center justify-between rounded-lg border p-3 ${
+                  className={`flex items-center justify-between rounded-2xl border p-3 transition ${
                     isVoted
-                      ? "border-amber-500 bg-amber-50 dark:bg-amber-950"
-                      : "border-zinc-200 dark:border-zinc-800"
+                      ? "border-amber-400/40 bg-amber-400/10"
+                      : "border-white/10 bg-white/[0.02]"
                   }`}
                 >
                   <span>{s.text}</span>
                   {isMine ? (
-                    <span className="text-xs text-zinc-400">あなたの回答</span>
+                    <span className="text-xs text-zinc-500">あなたの回答</span>
                   ) : (
                     <button
                       onClick={() =>
@@ -260,10 +265,10 @@ export default function RoomPage() {
                         })
                       }
                       disabled={busy}
-                      className={`rounded-lg px-3 py-1 text-sm font-medium ${
+                      className={`rounded-full px-3 py-1 text-sm font-medium transition ${
                         isVoted
-                          ? "bg-amber-500 text-white"
-                          : "border border-zinc-300 dark:border-zinc-700"
+                          ? "bg-gradient-to-r from-amber-400 to-orange-500 text-zinc-900"
+                          : "border border-white/15 text-zinc-300 hover:bg-white/[0.06]"
                       }`}
                     >
                       {isVoted ? "投票済み" : "座布団1枚"}
@@ -277,9 +282,10 @@ export default function RoomPage() {
       )}
 
       {room.phase === "results" && lastRound && (
-        <div className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="card space-y-4 p-7">
           <h2 className="text-lg font-semibold">
-            ラウンド {lastRound.round} の結果 — {lastRound.acronym}
+            ラウンド {lastRound.round} の結果 —{" "}
+            <span className="font-mono text-amber-300">{lastRound.acronym}</span>
           </h2>
           {lastRound.submissions.length === 0 ? (
             <p className="text-sm text-zinc-500">誰も回答しませんでした。</p>
@@ -292,10 +298,11 @@ export default function RoomPage() {
                   return (
                     <li
                       key={s.playerId}
-                      className="flex items-center justify-between rounded-lg bg-zinc-50 p-3 dark:bg-zinc-800"
+                      className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-3"
                     >
                       <span>
-                        <span className="font-medium">{author?.name ?? "?"}</span>: {s.text}
+                        <span className="font-medium text-zinc-200">{author?.name ?? "?"}</span>:{" "}
+                        {s.text}
                       </span>
                       <CushionStack count={lastRound.tally[s.playerId] ?? 0} />
                     </li>
@@ -304,7 +311,9 @@ export default function RoomPage() {
             </ul>
           )}
 
-          <h3 className="pt-2 text-sm font-semibold text-zinc-500">総合順位</h3>
+          <h3 className="pt-2 text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+            総合順位
+          </h3>
           <ol className="space-y-1">
             {sortedPlayers.map((p, i) => (
               <li key={p.id} className="flex items-center justify-between text-sm">
@@ -320,7 +329,7 @@ export default function RoomPage() {
             <button
               onClick={() => callAction("next", { playerId: player.playerId })}
               disabled={busy}
-              className="w-full rounded-xl bg-amber-500 py-3 font-semibold text-white hover:bg-amber-600 disabled:opacity-50"
+              className="btn-amber w-full"
             >
               {room.round >= room.maxRounds ? "最終結果を見る" : "次のラウンドへ"}
             </button>
@@ -331,13 +340,15 @@ export default function RoomPage() {
       )}
 
       {room.phase === "ended" && (
-        <div className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 className="text-xl font-bold">ゲーム終了！</h2>
+        <div className="card space-y-4 p-7">
+          <h2 className="text-xl font-bold">
+            <span className="gradient-text">ゲーム終了！</span>
+          </h2>
           <ol className="space-y-2">
             {sortedPlayers.map((p, i) => (
               <li
                 key={p.id}
-                className="flex items-center justify-between rounded-lg bg-zinc-50 p-3 dark:bg-zinc-800"
+                className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-3"
               >
                 <span className="font-medium">
                   {i === 0 ? "🏆 " : `${i + 1}. `}
@@ -348,10 +359,7 @@ export default function RoomPage() {
               </li>
             ))}
           </ol>
-          <Link
-            href="/play"
-            className="block w-full rounded-xl bg-amber-500 py-3 text-center font-semibold text-white hover:bg-amber-600"
-          >
+          <Link href="/play" className="btn-amber block w-full text-center">
             もう一度遊ぶ
           </Link>
         </div>

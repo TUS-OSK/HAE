@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import { COMMON_WORDS, FUNCTION_WORDS } from "./words";
-import type { Theme } from "./acronym";
+import { checkInitials, type Theme } from "./acronym";
 
 export type ScoreBreakdown = {
   grammar: number; // 0-25
@@ -61,7 +61,7 @@ const SCORE_SCHEMA = {
     themeMatch: {
       type: "integer",
       description:
-        "0-25. How well the phrase fits the given theme. If there is no theme, judge general coherence/cleverness instead and still score 0-25.",
+        "0-25. Judge the OVERALL MEANING of the phrase as a whole against the theme scenario — read it like a sentence or title, never word-by-word. A phrase built entirely from plain, non-'thematic' vocabulary can still score high if the situation it describes genuinely fits the scenario; conversely, cramming in obviously theme-related buzzwords that don't add up to a coherent, fitting scenario should score LOW. If there is no theme, judge general coherence/cleverness of the whole phrase instead and still score 0-25.",
     },
     difficulty: {
       type: "integer",
@@ -98,7 +98,15 @@ const SCORE_TOOL_OPENAI: OpenAI.Chat.ChatCompletionTool = {
 };
 
 const SCORE_SYSTEM_PROMPT =
-  "You are the judge for HAE (How to Expand Acronym), a word game where players turn a random string of letters into an English phrase, one word per letter, in order. Grade the player's expansion fairly and encouragingly. Always call the submit_score tool exactly once.";
+  "You are the judge for HAE (How to Expand Acronym), a word game where players turn a random string of letters into an English phrase, one word per letter, in order. The letter-mapping has already been validated by code before you see it, so don't re-check or penalize it — some lowercase connector words (\"by\"/\"of\"/\"and\"/\"the\"/\"that\"/etc.) may appear between the letter words by design. Grade the player's expansion fairly and encouragingly. For themeMatch specifically, evaluate the phrase's overall meaning and implied scenario against the theme — do NOT just check whether individual words look 'thematic' in isolation; a coherent phrase describing the right situation beats a pile of theme keywords that don't form a sensible picture. Always call the submit_score tool exactly once.";
+
+function buildUserPrompt(acronym: string, theme: Theme, answer: string): string {
+  const themeLine =
+    theme.id === "none"
+      ? "No theme was assigned for this round — judge general coherence and cleverness."
+      : `Theme scenario: ${theme.hint}`;
+  return `Acronym: ${acronym.toUpperCase()}\n${themeLine}\nPlayer's expansion: "${answer}"\n\nGrade this expansion.`;
+}
 
 function buildScoreFromToolInput(input: Record<string, unknown>): {
   grammar: number;
@@ -127,10 +135,6 @@ async function scoreWithAI(
   if (!client) return null;
 
   const model = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5-20251001";
-  const themeLine =
-    theme.id === "none"
-      ? "No theme was assigned for this round."
-      : `The assigned theme is "${theme.label.replace(/\s*\(.+\)/, "")}".`;
 
   try {
     const message = await client.messages.create({
@@ -140,7 +144,7 @@ async function scoreWithAI(
       messages: [
         {
           role: "user",
-          content: `Acronym: ${acronym.toUpperCase()}\n${themeLine}\nPlayer's expansion: "${answer}"\n\nGrade this expansion.`,
+          content: buildUserPrompt(acronym, theme, answer),
         },
       ],
       tools: [SCORE_TOOL],
@@ -173,10 +177,6 @@ async function scoreWithOpenCode(
   if (!client) return null;
 
   const model = process.env.OPENCODE_MODEL || "kimi-k2.6";
-  const themeLine =
-    theme.id === "none"
-      ? "No theme was assigned for this round."
-      : `The assigned theme is "${theme.label.replace(/\s*\(.+\)/, "")}".`;
 
   try {
     const completion = await client.chat.completions.create({
@@ -186,7 +186,7 @@ async function scoreWithOpenCode(
         { role: "system", content: SCORE_SYSTEM_PROMPT },
         {
           role: "user",
-          content: `Acronym: ${acronym.toUpperCase()}\n${themeLine}\nPlayer's expansion: "${answer}"\n\nGrade this expansion.`,
+          content: buildUserPrompt(acronym, theme, answer),
         },
       ],
       tools: [SCORE_TOOL_OPENAI],
@@ -214,6 +214,22 @@ function scoreHeuristically(
   theme: Theme,
   words: string[]
 ): ScoreBreakdown {
+  // This scorer can't judge free-form phrasing the way the AI grader can, so
+  // it still needs the strict structural check here — unlike the AI paths,
+  // which decide lettersMatch themselves.
+  const check = checkInitials(acronym, words.join(" "));
+  if (!check.ok) {
+    return {
+      grammar: 0,
+      themeMatch: 0,
+      difficulty: 0,
+      metafiction: 0,
+      total: 0,
+      comment: `${check.reason} (offline scorer — no AI key configured)`,
+      engine: "heuristic",
+    };
+  }
+
   const lower = words.map((w) => w.toLowerCase().replace(/[^a-z']/g, ""));
 
   // Grammar (rough proxy): reward a healthy mix of function words + content
@@ -226,22 +242,33 @@ function scoreHeuristically(
   grammar += Math.round(uniqueRatio * 6);
   grammar = clampScore(grammar);
 
-  // Theme match: keyword overlap against the theme's curated keyword list.
+  // Theme match: this offline fallback can't judge overall *meaning* the way
+  // the AI grader does, so it leans on whole-phrase coherence (the same
+  // proxy used for grammar above) and treats keyword overlap as a lighter
+  // supporting signal rather than the whole score — a coherent phrase with
+  // zero exact keyword hits still gets partial credit, while keyword-stuffed
+  // but incoherent phrases are capped lower.
+  const coherence = hasSomeStructure ? 1 : 0.4;
   let themeMatch: number;
   if (theme.id === "none" || theme.keywords.length === 0) {
-    themeMatch = clampScore(14 + Math.round(uniqueRatio * 8));
+    themeMatch = clampScore(10 + Math.round(uniqueRatio * 7) + Math.round(coherence * 8));
   } else {
     const text = lower.join(" ");
     const hits = theme.keywords.filter((k) => text.includes(k)).length;
-    themeMatch = clampScore(6 + hits * 8);
+    const relevance = Math.min(1, hits / 2);
+    themeMatch = clampScore(4 + relevance * 13 + coherence * 8);
   }
 
-  // Difficulty: reward longer / less-common words.
-  const rareCount = lower.filter(
+  // Difficulty: reward longer / less-common *content* words. Connector
+  // filler (by/of/and/...) is excluded so it can't dilute or inflate this.
+  const contentLower = lower.filter((w) => !FUNCTION_WORDS.has(w));
+  const difficultyWords = contentLower.length > 0 ? contentLower : lower;
+  const rareCount = difficultyWords.filter(
     (w) => w.length >= 3 && !COMMON_WORDS.has(w)
   ).length;
-  const avgLen = lower.reduce((s, w) => s + w.length, 0) / lower.length;
-  let difficulty = Math.round((rareCount / lower.length) * 18 + avgLen);
+  const avgLen =
+    difficultyWords.reduce((s, w) => s + w.length, 0) / difficultyWords.length;
+  let difficulty = Math.round((rareCount / difficultyWords.length) * 18 + avgLen);
   difficulty = clampScore(difficulty);
 
   // Metafiction: keyword-spot for self-aware / game-referential vocabulary.

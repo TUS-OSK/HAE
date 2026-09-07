@@ -51,56 +51,60 @@ export default function PlayLobbyPage() {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-6 py-10">
       <div className="flex items-center justify-between">
-        <Link href="/" className="text-sm text-zinc-500 hover:underline">
+        <Link href="/" className="text-sm text-zinc-500 transition hover:text-zinc-300">
           ← トップへ
         </Link>
-        <h1 className="text-xl font-bold">マルチプレイ</h1>
-        <span />
+        <h1 className="text-xl font-bold text-amber-300">マルチプレイ</h1>
+        <span className="w-16" />
       </div>
 
-      <div className="flex rounded-xl bg-zinc-100 p-1 dark:bg-zinc-900">
+      <div className="flex rounded-2xl border border-white/10 bg-white/[0.03] p-1">
         <button
           onClick={() => setMode("create")}
-          className={`flex-1 rounded-lg py-2 text-sm font-medium ${
-            mode === "create" ? "bg-white shadow dark:bg-zinc-800" : "text-zinc-500"
+          className={`btn-pill-toggle flex-1 ${
+            mode === "create"
+              ? "bg-gradient-to-r from-amber-400 to-orange-500 text-zinc-900"
+              : "text-zinc-400"
           }`}
         >
           ルームを作る
         </button>
         <button
           onClick={() => setMode("join")}
-          className={`flex-1 rounded-lg py-2 text-sm font-medium ${
-            mode === "join" ? "bg-white shadow dark:bg-zinc-800" : "text-zinc-500"
+          className={`btn-pill-toggle flex-1 ${
+            mode === "join"
+              ? "bg-gradient-to-r from-amber-400 to-orange-500 text-zinc-900"
+              : "text-zinc-400"
           }`}
         >
           参加する
         </button>
       </div>
 
-      <div className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="card space-y-5 p-7">
         <div>
-          <label className="mb-1 block text-sm font-medium">名前</label>
+          <label className="mb-2 block text-sm font-medium text-zinc-300">名前</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             maxLength={20}
             placeholder="ニックネーム"
-            className="w-full rounded-lg border border-zinc-300 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-800"
+            className="input-field"
           />
         </div>
 
         {mode === "create" ? (
           <div>
-            <label className="mb-1 block text-sm font-medium">ラウンド数</label>
+            <label className="mb-2 block text-sm font-medium text-zinc-300">ラウンド数</label>
             <div className="flex gap-2">
               {[3, 5, 7].map((n) => (
                 <button
                   key={n}
                   onClick={() => setMaxRounds(n)}
-                  className={`h-10 w-10 rounded-lg border font-semibold ${
+                  className={`h-10 w-10 rounded-xl border font-semibold transition ${
                     maxRounds === n
-                      ? "border-amber-500 bg-amber-500 text-white"
-                      : "border-zinc-300 dark:border-zinc-700"
+                      ? "border-amber-400 bg-gradient-to-br from-amber-400 to-orange-500 text-zinc-900"
+                      : "border-white/10 bg-white/[0.02] text-zinc-300 hover:bg-white/[0.06]"
                   }`}
                 >
                   {n}
@@ -110,23 +114,25 @@ export default function PlayLobbyPage() {
           </div>
         ) : (
           <div>
-            <label className="mb-1 block text-sm font-medium">ルームコード</label>
+            <label className="mb-2 block text-sm font-medium text-zinc-300">
+              ルームコード
+            </label>
             <input
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
               maxLength={4}
               placeholder="ABCD"
-              className="w-full rounded-lg border border-zinc-300 bg-white p-2 font-mono text-lg tracking-widest dark:border-zinc-700 dark:bg-zinc-800"
+              className="input-field font-mono text-lg tracking-widest"
             />
           </div>
         )}
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-red-400">{error}</p>}
 
         <button
           onClick={mode === "create" ? createRoom : joinRoom}
           disabled={isPending}
-          className="w-full rounded-xl bg-amber-500 py-3 font-semibold text-white transition hover:bg-amber-600 disabled:opacity-50"
+          className="btn-amber w-full"
         >
           {isPending ? "処理中..." : mode === "create" ? "ルームを作成" : "参加する"}
         </button>

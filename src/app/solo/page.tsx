@@ -7,9 +7,16 @@ import type { ScoreBreakdown } from "@/lib/scoring";
 import { startRound, submitSoloAnswer } from "./actions";
 import { AcronymBadge } from "@/components/AcronymBadge";
 import { ScoreBreakdownView } from "@/components/ScoreBreakdownView";
+import { StatsPanel } from "@/components/StatsPanel";
+import {
+  addHistoryEntry,
+  clearHistory,
+  computeStats,
+  loadHistory,
+  type HistoryEntry,
+} from "./soloHistory";
 
 type Round = { acronym: string; themeId: string };
-type HistoryEntry = { round: Round; answer: string; score: ScoreBreakdown };
 
 export default function SoloPage() {
   const [length, setLength] = useState(4);
@@ -18,10 +25,11 @@ export default function SoloPage() {
   const [answer, setAnswer] = useState("");
   const [score, setScore] = useState<ScoreBreakdown | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
   const [isPending, startTransition] = useTransition();
 
   const theme = round ? THEMES.find((t) => t.id === round.themeId) ?? THEMES[0] : null;
+  const stats = computeStats(history);
 
   function newRound() {
     setError(null);
@@ -43,33 +51,47 @@ export default function SoloPage() {
         return;
       }
       setScore(result.score);
-      setHistory((h) => [{ round, answer, score: result.score }, ...h].slice(0, 10));
+      setHistory(
+        addHistoryEntry({
+          acronym: round.acronym,
+          themeId: round.themeId,
+          answer,
+          score: result.score,
+        })
+      );
     });
+  }
+
+  function resetStats() {
+    clearHistory();
+    setHistory([]);
   }
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-10">
       <div className="flex items-center justify-between">
-        <Link href="/" className="text-sm text-zinc-500 hover:underline">
+        <Link href="/" className="text-sm text-zinc-500 transition hover:text-zinc-300">
           ← トップへ
         </Link>
-        <h1 className="text-xl font-bold">ソロプレイ</h1>
-        <span />
+        <h1 className="text-xl font-bold">
+          <span className="gradient-text">ソロプレイ</span>
+        </h1>
+        <span className="w-16" />
       </div>
 
       {!round && (
-        <div className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="card space-y-5 p-7">
           <div>
-            <label className="mb-1 block text-sm font-medium">頭文字の数</label>
+            <label className="mb-2 block text-sm font-medium text-zinc-300">頭文字の数</label>
             <div className="flex gap-2">
               {[3, 4, 5, 6].map((n) => (
                 <button
                   key={n}
                   onClick={() => setLength(n)}
-                  className={`h-10 w-10 rounded-lg border font-semibold ${
+                  className={`h-10 w-10 rounded-xl border font-semibold transition ${
                     length === n
-                      ? "border-indigo-500 bg-indigo-500 text-white"
-                      : "border-zinc-300 dark:border-zinc-700"
+                      ? "border-violet-400 bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white"
+                      : "border-white/10 bg-white/[0.02] text-zinc-300 hover:bg-white/[0.06]"
                   }`}
                 >
                   {n}
@@ -78,13 +100,13 @@ export default function SoloPage() {
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium">テーマ</label>
+            <label className="mb-2 block text-sm font-medium text-zinc-300">テーマ</label>
             <select
               value={themeChoice}
               onChange={(e) => setThemeChoice(e.target.value)}
-              className="w-full rounded-lg border border-zinc-300 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-800"
+              className="input-field"
             >
-              <option value="random">ランダム</option>
+              <option value="random">ランダム(テーマあり)</option>
               {THEMES.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.label}
@@ -92,28 +114,24 @@ export default function SoloPage() {
               ))}
             </select>
           </div>
-          <button
-            onClick={newRound}
-            disabled={isPending}
-            className="w-full rounded-xl bg-indigo-600 py-3 font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50"
-          >
+          <button onClick={newRound} disabled={isPending} className="btn-violet w-full">
             {isPending ? "生成中..." : "スタート"}
           </button>
         </div>
       )}
 
       {round && (
-        <div className="space-y-5 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="card space-y-5 p-7">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <AcronymBadge acronym={round.acronym} />
             {theme && theme.id !== "none" && (
-              <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+              <span className="chip border-violet-400/30 bg-violet-500/10 text-violet-300">
                 {theme.label}
               </span>
             )}
           </div>
           {theme && theme.id !== "none" && (
-            <p className="text-sm text-zinc-500">{theme.hint}</p>
+            <p className="text-sm text-zinc-400">{theme.hint}</p>
           )}
 
           {!score && (
@@ -126,21 +144,22 @@ export default function SoloPage() {
                   .map((l) => l + "...")
                   .join(" ")}`}
                 rows={2}
-                className="w-full resize-none rounded-lg border border-zinc-300 bg-white p-3 text-lg dark:border-zinc-700 dark:bg-zinc-800"
+                className="input-field resize-none text-lg"
               />
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              <p className="text-xs text-zinc-500">
+                <span className="font-mono text-zinc-400">by / of / and</span>{" "}
+                のような小文字の助詞は自由に挟んでOK(頭文字にはカウントされません)。
+              </p>
+              {error && <p className="text-sm text-red-400">{error}</p>}
               <div className="flex gap-3">
                 <button
                   onClick={submit}
                   disabled={isPending || !answer.trim()}
-                  className="flex-1 rounded-xl bg-indigo-600 py-3 font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50"
+                  className="btn-violet flex-1"
                 >
                   {isPending ? "採点中..." : "採点する"}
                 </button>
-                <button
-                  onClick={() => setRound(null)}
-                  className="rounded-xl border border-zinc-300 px-4 py-3 text-sm dark:border-zinc-700"
-                >
+                <button onClick={() => setRound(null)} className="btn-ghost">
                   やめる
                 </button>
               </div>
@@ -149,13 +168,11 @@ export default function SoloPage() {
 
           {score && (
             <>
-              <p className="rounded-lg bg-zinc-50 p-3 text-lg dark:bg-zinc-800">{answer}</p>
+              <p className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-lg">
+                {answer}
+              </p>
               <ScoreBreakdownView score={score} />
-              <button
-                onClick={newRound}
-                disabled={isPending}
-                className="w-full rounded-xl bg-indigo-600 py-3 font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50"
-              >
+              <button onClick={newRound} disabled={isPending} className="btn-violet w-full">
                 次のラウンド
               </button>
             </>
@@ -163,21 +180,32 @@ export default function SoloPage() {
         </div>
       )}
 
+      <StatsPanel stats={stats} />
+
       {history.length > 0 && (
         <div>
-          <h2 className="mb-2 text-sm font-semibold text-zinc-500">履歴</h2>
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-semibold tracking-wide text-zinc-400 uppercase">
+              履歴
+            </h2>
+            <button
+              onClick={resetStats}
+              className="text-xs text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline"
+            >
+              履歴をリセット
+            </button>
+          </div>
           <ul className="space-y-2">
-            {history.map((h, i) => (
+            {history.slice(0, 10).map((h) => (
               <li
-                key={i}
-                className="flex items-center justify-between rounded-lg bg-white p-3 text-sm dark:bg-zinc-900"
+                key={h.id}
+                className="card flex items-center justify-between px-4 py-3 text-sm"
               >
                 <span>
-                  <span className="font-mono font-bold">{h.round.acronym}</span> — {h.answer}
+                  <span className="font-mono font-bold text-violet-300">{h.acronym}</span>{" "}
+                  — {h.answer}
                 </span>
-                <span className="font-semibold text-indigo-600 dark:text-indigo-400">
-                  {h.score.total}/100
-                </span>
+                <span className="font-semibold text-zinc-200">{h.score.total}/100</span>
               </li>
             ))}
           </ul>

@@ -17,6 +17,12 @@ export async function submitSoloAnswer(
   themeId: string,
   answer: string
 ): Promise<{ score: ScoreBreakdown } | { error: string }> {
+  // Letter-matching is a mechanical, deterministic check — code does this
+  // reliably and instantly. The AI grader is much better spent purely on
+  // the qualitative judgment calls (grammar, theme fit, difficulty, wit)
+  // once validity is already confirmed, rather than re-deriving/verifying
+  // the letter mapping itself, which it can get wrong on an otherwise
+  // correct phrase.
   const check = checkInitials(acronym, answer);
   if (!check.ok) return { error: check.reason };
 
