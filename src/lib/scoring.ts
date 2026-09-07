@@ -31,14 +31,29 @@ function getClient(): Anthropic | null {
 
 let openCodeClient: OpenAI | null | undefined;
 
+// A stable per-process id so OpenCode Go can route/cache consistently. Our
+// calls are one-off (no multi-turn conversation), so per-process is enough —
+// it just needs to not be blank or change every request.
+const OPENCODE_SESSION_ID = `hae-${crypto.randomUUID()}`;
+
 // OpenCode Go (https://opencode.ai/docs/ja/go) is an OpenAI-compatible
 // gateway to third-party models. It's used as a fallback AI grader when no
-// native Anthropic key is configured.
+// native Anthropic key is configured. It expects an x-opencode-session
+// header (stable per-conversation id, for routing/caching) and a
+// descriptive User-Agent — omitting them gets requests rejected with
+// "cannot be routed efficiently".
 function getOpenCodeClient(): OpenAI | null {
   if (openCodeClient !== undefined) return openCodeClient;
   const apiKey = process.env.OPENCODE_API_KEY;
   openCodeClient = apiKey
-    ? new OpenAI({ apiKey, baseURL: "https://opencode.ai/zen/go/v1" })
+    ? new OpenAI({
+        apiKey,
+        baseURL: "https://opencode.ai/zen/go/v1",
+        defaultHeaders: {
+          "x-opencode-session": OPENCODE_SESSION_ID,
+          "User-Agent": "hae-word-game/1.0",
+        },
+      })
     : null;
   return openCodeClient;
 }
